@@ -1,180 +1,217 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int mdc(int a, int b) {
-    a = abs(a);
-    b = abs(b);
-    while (b != 0) {
-        int temp = b;
-        b = a % b;
-        a = temp;
-    }
-    return a;
-}
-
-int mmc(int a, int b) {
-    return (a * b) / mdc(a, b);
-}
-
-int finalSomaNumerador(int a, int b, int c){
-    int result = (c/b)*a;
-    return result;
-}
-
-int main(){
-    int numerador1,numerador2,denominador1,denominador2,opcao=1;
+/**
+ * Calcula o Máximo Divisor Comum (MDC) entre dois números
+ * usando o algoritmo de Euclides.
+ * 
+ * @param numero_a Primeiro número
+ * @param numero_b Segundo número
+ * @return MDC entre numero_a e numero_b
+ */
+int calcular_mdc(int numero_a, int numero_b) {
+    numero_a = abs(numero_a);
+    numero_b = abs(numero_b);
     
-    printf("Bem-vindo à calculadora de frações simples!\n");
-    printf("Você pode realizar operações de soma, subtração, multiplicação e divisão entre duas frações.\n");
-    printf("Para sair do programa, digite 0 quando solicitado a escolher uma opção.\n");
+    while (numero_b != 0) {
+        int temporario = numero_b;
+        numero_b = numero_a % numero_b;
+        numero_a = temporario;
+    }
+    return numero_a;
+}
 
-    while(opcao!=0){
-        printf("Escolha uma opção:\n");
-        printf("1. Soma\n");
-        printf("2. Subtração\n");
-        printf("3. Multiplicação\n");
-        printf("4. Divisão\n");
-        printf("0. Sair\n");
-        scanf("%d", &opcao);
+/**
+ * Calcula o Mínimo Múltiplo Comum (MMC) entre dois números.
+ * 
+ * @param numero_a Primeiro número
+ * @param numero_b Segundo número
+ * @return MMC entre numero_a e numero_b
+ */
+int calcular_mmc(int numero_a, int numero_b) {
+    // Evita divisão por zero e overflow
+    if (numero_a == 0 || numero_b == 0) return 0;
+    
+    int valor_mdc = calcular_mdc(numero_a, numero_b);
+    // Calcula MMC de forma segura para evitar overflow
+    return (numero_a / valor_mdc) * numero_b;
+}
 
-        switch(opcao){
+/**
+ * Calcula o numerador equivalente quando o denominador é alterado.
+ * 
+ * @param numerador Numerador original
+ * @param denominador Denominador original
+ * @param novo_denominador Novo denominador
+ * @return Numerador equivalente para o novo denominador
+ */
+int calcular_numerador_equivalente(int numerador, int denominador, int novo_denominador) {
+    return numerador * (novo_denominador / denominador);
+}
+
+/**
+ * Lê uma fração do usuário com validação.
+ * 
+ * @param ponteiro_numerador Ponteiro para armazenar o numerador
+ * @param ponteiro_denominador Ponteiro para armazenar o denominador
+ * @param numero_fracao Número da fração (1ª ou 2ª)
+ */
+void ler_fracao(int *ponteiro_numerador, int *ponteiro_denominador, int numero_fracao) {
+    printf("Informe o numerador da %da fração: ", numero_fracao);
+    scanf("%d", ponteiro_numerador);
+    
+    printf("Informe o denominador da %da fração: ", numero_fracao);
+    scanf("%d", ponteiro_denominador);
+    
+    while (*ponteiro_denominador == 0) {
+        printf("Erro: Denominador não pode ser zero. Tente novamente: ");
+        scanf("%d", ponteiro_denominador);
+    }
+}
+
+/**
+ * Simplifica uma fração e ajusta o sinal.
+ * 
+ * @param ponteiro_numerador Ponteiro para o numerador (será modificado)
+ * @param ponteiro_denominador Ponteiro para o denominador (será modificado)
+ */
+void simplificar_fracao(int *ponteiro_numerador, int *ponteiro_denominador) {
+    int divisor = calcular_mdc(*ponteiro_numerador, *ponteiro_denominador);
+    *ponteiro_numerador /= divisor;
+    *ponteiro_denominador /= divisor;
+    
+    // Garante que o denominador seja sempre positivo
+    if (*ponteiro_denominador < 0) {
+        *ponteiro_numerador *= -1;
+        *ponteiro_denominador *= -1;
+    }
+}
+
+/**
+ * Exibe o resultado de uma operação com frações.
+ * 
+ * @param numerador Numerador do resultado
+ * @param denominador Denominador do resultado
+ * @param nome_operacao String representando a operação (ex: "Soma")
+ */
+void exibir_resultado(int numerador, int denominador, const char *nome_operacao) {
+    int numerador_simplificado = numerador;
+    int denominador_simplificado = denominador;
+    
+    printf("\n--- Resultado da %s ---\n", nome_operacao);
+    printf("Resultado bruto: %d/%d\n", numerador, denominador);
+    
+    simplificar_fracao(&numerador_simplificado, &denominador_simplificado);
+    printf("Forma simplificada: %d/%d\n", numerador_simplificado, denominador_simplificado);
+    
+    if (denominador_simplificado == 1) {
+        printf("Resultado como inteiro: %d\n", numerador_simplificado);
+    }
+    printf("-----------------------------\n\n");
+}
+
+/**
+ * Realiza a operação de soma entre duas frações.
+ */
+void executar_soma() {
+    int numerador_1, denominador_1, numerador_2, denominador_2;
+    
+    ler_fracao(&numerador_1, &denominador_1, 1);
+    ler_fracao(&numerador_2, &denominador_2, 2);
+    
+    if (denominador_1 == denominador_2) {
+        exibir_resultado(numerador_1 + numerador_2, denominador_1, "Soma");
+    } else {
+        int novo_denominador = calcular_mmc(denominador_1, denominador_2);
+        int novo_numerador_1 = calcular_numerador_equivalente(numerador_1, denominador_1, novo_denominador);
+        int novo_numerador_2 = calcular_numerador_equivalente(numerador_2, denominador_2, novo_denominador);
+        exibir_resultado(novo_numerador_1 + novo_numerador_2, novo_denominador, "Soma");
+    }
+}
+
+/**
+ * Realiza a operação de subtração entre duas frações.
+ */
+void executar_subtracao() {
+    int numerador_1, denominador_1, numerador_2, denominador_2;
+    
+    ler_fracao(&numerador_1, &denominador_1, 1);
+    ler_fracao(&numerador_2, &denominador_2, 2);
+    
+    if (denominador_1 == denominador_2) {
+        exibir_resultado(numerador_1 - numerador_2, denominador_1, "Subtração");
+    } else {
+        int novo_denominador = calcular_mmc(denominador_1, denominador_2);
+        int novo_numerador_1 = calcular_numerador_equivalente(numerador_1, denominador_1, novo_denominador);
+        int novo_numerador_2 = calcular_numerador_equivalente(numerador_2, denominador_2, novo_denominador);
+        exibir_resultado(novo_numerador_1 - novo_numerador_2, novo_denominador, "Subtração");
+    }
+}
+
+/**
+ * Realiza a operação de multiplicação entre duas frações.
+ */
+void executar_multiplicacao() {
+    int numerador_1, denominador_1, numerador_2, denominador_2;
+    
+    ler_fracao(&numerador_1, &denominador_1, 1);
+    ler_fracao(&numerador_2, &denominador_2, 2);
+    
+    exibir_resultado(numerador_1 * numerador_2, denominador_1 * denominador_2, "Multiplicação");
+}
+
+/**
+ * Realiza a operação de divisão entre duas frações.
+ */
+void executar_divisao() {
+    int numerador_1, denominador_1, numerador_2, denominador_2;
+    
+    ler_fracao(&numerador_1, &denominador_1, 1);
+    ler_fracao(&numerador_2, &denominador_2, 2);
+    
+    if (numerador_2 == 0) {
+        printf("Erro: Não é possível dividir por zero!\n");
+        return;
+    }
+    
+    exibir_resultado(numerador_1 * denominador_2, denominador_1 * numerador_2, "Divisão");
+}
+
+/**
+ * Exibe o menu de opções.
+ */
+void exibir_menu_principal() {
+    printf("\n=== Calculadora de Frações ===\n");
+    printf("1. Soma\n");
+    printf("2. Subtração\n");
+    printf("3. Multiplicação\n");
+    printf("4. Divisão\n");
+    printf("0. Sair\n");
+    printf("Escolha uma opção: ");
+}
+
+int main() {
+    int opcao_selecionada = -1;
+    
+    printf("Bem-vindo à calculadora de frações!\n");
+    printf("Você pode realizar operações entre duas frações.\n");
+    
+    while (opcao_selecionada != 0) {
+        exibir_menu_principal();
+        scanf("%d", &opcao_selecionada);
+        
+        switch (opcao_selecionada) {
             case 1:
-                printf("Informe o numerador da primeira fração: ");
-                scanf("%d",&numerador1);
-                printf("Informe o denominador da primeira fração: ");
-                scanf("%d",&denominador1);
-                while(denominador1 == 0){
-                    printf("Denominador não pode ser zero. Tente novamente.\n");
-                    scanf("%d",&denominador1);
-                }
-                printf("Informe o numerador da segunda fração: ");
-                scanf("%d",&numerador2);
-                printf("Informe o denominador da segunda fração: ");
-                scanf("%d",&denominador2);
-                while(denominador2 == 0){
-                    printf("Denominador não pode ser zero. Tente novamente.\n");
-                    scanf("%d",&denominador2);
-                }
-
-                if(denominador1==denominador2){
-                    int somaNumerador = numerador1 + numerador2;
-                    int divisor = mdc(somaNumerador, denominador1);
-                    int simplesNumerador = somaNumerador / divisor;
-                    int simplesDenominador = denominador1 / divisor;
-                    printf("Resultado: %d/%d\n", somaNumerador, denominador1);
-                    printf("Forma simplificada: %d/%d\n", simplesNumerador, simplesDenominador);
-                }else{
-                    int novoDenomidador=mmc(denominador1, denominador2);
-                    int novoNumerador1=finalSomaNumerador(numerador1,denominador1,novoDenomidador);
-                    int novoNumerador2=finalSomaNumerador(numerador2,denominador2,novoDenomidador);
-                    printf("Resultado: %d/%d\n", novoNumerador1 + novoNumerador2, novoDenomidador);
-                    int divisor = mdc(novoNumerador1 + novoNumerador2, novoDenomidador);
-                    int simplesNumerador = (novoNumerador1 + novoNumerador2) / divisor;
-                    int simplesDenominador = novoDenomidador / divisor;
-                    printf("Forma simplificada: %d/%d\n", simplesNumerador, simplesDenominador);
-                }
+                executar_soma();
                 break;
             case 2:
-                printf("Informe o numerador da primeira fração: ");
-                scanf("%d",&numerador1);
-                printf("Informe o denominador da primeira fração: ");
-                scanf("%d",&denominador1);
-                while(denominador1 == 0){
-                    printf("Denominador não pode ser zero. Tente novamente.\n");
-                    scanf("%d",&denominador1);
-                }
-                printf("Informe o numerador da segunda fração: ");
-                scanf("%d",&numerador2);
-                printf("Informe o denominador da segunda fração: ");
-                scanf("%d",&denominador2);
-                while(denominador2 == 0){
-                    printf("Denominador não pode ser zero. Tente novamente.\n");
-                    scanf("%d",&denominador2);
-                }
-                
-                if(denominador1==denominador2){
-                    int subNumerador = numerador1 - numerador2;
-                    int divisor = mdc(subNumerador, denominador1);
-                    int simplesNumerador = subNumerador / divisor;
-                    int simplesDenominador = denominador1 / divisor;
-                    printf("Resultado: %d/%d\n", subNumerador, denominador1);
-                    printf("Forma simplificada: %d/%d\n", simplesNumerador, simplesDenominador);
-                }else{
-                    int novoDenomidador=mmc(denominador1, denominador2);
-                    int novoNumerador1=finalSomaNumerador(numerador1,denominador1,novoDenomidador);
-                    int novoNumerador2=finalSomaNumerador(numerador2,denominador2,novoDenomidador);
-                    int finalNumerador = novoNumerador1 - novoNumerador2;
-                    printf("Resultado: %d/%d\n", finalNumerador, novoDenomidador);
-                    int divisor = mdc(finalNumerador, novoDenomidador);
-                    int simplesNumerador = finalNumerador / divisor;
-                    int simplesDenominador = novoDenomidador / divisor;
-                    if (simplesDenominador < 0) {
-                        simplesDenominador *= -1;
-                        simplesNumerador *= -1;
-                    }
-                    printf("Forma simplificada: %d/%d\n", simplesNumerador, simplesDenominador);
-                }
+                executar_subtracao();
                 break;
             case 3:
-                printf("Informe o numerador da primeira fração: ");
-                scanf("%d",&numerador1);
-                printf("Informe o denominador da primeira fração: ");
-                scanf("%d",&denominador1);
-                while(denominador1 == 0){
-                    printf("Denominador não pode ser zero. Tente novamente.\n");
-                    scanf("%d",&denominador1);
-                }
-                printf("Informe o numerador da segunda fração: ");
-                scanf("%d",&numerador2);
-                printf("Informe o denominador da segunda fração: ");
-                scanf("%d",&denominador2);
-                while(denominador2 == 0){
-                    printf("Denominador não pode ser zero. Tente novamente.\n");
-                    scanf("%d",&denominador2);
-                }
-
-                printf("Resultado: %d/%d\n", numerador1 * numerador2, denominador1 * denominador2);
-                int divisor = mdc(numerador1 * numerador2, denominador1 * denominador2);
-                int simplesNumerador = (numerador1 * numerador2) / divisor;
-                int simplesDenominador = (denominador1 * denominador2) / divisor;
-                printf("Forma simplificada: %d/%d\n", simplesNumerador, simplesDenominador);
+                executar_multiplicacao();
                 break;
             case 4:
-                printf("Informe o numerador da primeira fração: ");
-                scanf("%d",&numerador1);
-                printf("Informe o denominador da primeira fração: ");
-                scanf("%d",&denominador1);
-                while(denominador1 == 0){
-                    printf("Denominador não pode ser zero. Tente novamente.\n");
-                    scanf("%d",&denominador1);
-                }
-                printf("Informe o numerador da segunda fração: ");
-                scanf("%d",&numerador2);
-                printf("Informe o denominador da segunda fração: ");
-                scanf("%d",&denominador2);
-                while(denominador2 == 0){
-                    printf("Denominador não pode ser zero. Tente novamente.\n");
-                    scanf("%d",&denominador2);
-                }
-
-                if (numerador2 == 0) {
-                    printf("Erro: divisão por zero (numerador da segunda fração é zero).\n");
-                break;
-                }
-
-                int resultadoNumerador = numerador1 * denominador2;
-                int resultadoDenominador = denominador1 * numerador2;
-                printf("Resultado: %d/%d\n", resultadoNumerador, resultadoDenominador);
-                int divisorr = mdc(resultadoNumerador, resultadoDenominador);
-                int simplesNumeradorr = resultadoNumerador / divisorr;
-                int simplesDenominadorr = resultadoDenominador / divisorr;
-
-                // Corrige o sinal, se o denominador estiver negativo
-                if (simplesDenominadorr < 0) {
-                    simplesNumeradorr *= -1;
-                    simplesDenominadorr *= -1;
-                }
-                printf("Forma simplificada: %d/%d\n", simplesNumeradorr, simplesDenominadorr);
+                executar_divisao();
                 break;
             case 0:
                 printf("Saindo do programa! Obrigado!\n");
@@ -183,8 +220,7 @@ int main(){
                 printf("Opção inválida! Tente novamente.\n");
                 break;
         }
-
-        
     }
+    
     return 0;
 }
